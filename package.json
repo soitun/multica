@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "agent:cli": "tsx --env-file=.env src/agent/cli.ts",
+    "agent:cli": "tsx src/agent/cli.ts",
     "agent:interactive": "tsx src/agent/interactive-cli.ts",
     "agent:profile": "tsx src/agent/profile-cli.ts",
     "dev:gateway": "tsx --watch src/gateway/main.ts",
