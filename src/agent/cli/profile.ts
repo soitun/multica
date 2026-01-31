@@ -16,8 +16,8 @@ import {
   loadAgentProfile,
   getProfileDir,
   profileExists,
-} from "./profile/index.js";
-import { DATA_DIR } from "../shared/index.js";
+} from "../profile/index.js";
+import { DATA_DIR } from "../../shared/index.js";
 
 const DEFAULT_BASE_DIR = join(DATA_DIR, "agent-profiles");
 

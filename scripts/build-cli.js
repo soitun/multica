@@ -29,9 +29,9 @@ const stripShebangPlugin = {
 
 async function build() {
   const entryPoints = [
-    { entry: "src/agent/interactive-cli.ts", outfile: "bin/multica-interactive.mjs" },
-    { entry: "src/agent/cli.ts", outfile: "bin/multica-cli.mjs" },
-    { entry: "src/agent/profile-cli.ts", outfile: "bin/multica-profile.mjs" },
+    { entry: "src/agent/cli/interactive.ts", outfile: "bin/multica-interactive.mjs" },
+    { entry: "src/agent/cli/non-interactive.ts", outfile: "bin/multica-cli.mjs" },
+    { entry: "src/agent/cli/profile.ts", outfile: "bin/multica-profile.mjs" },
   ];
 
   for (const { entry, outfile } of entryPoints) {

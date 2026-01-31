@@ -21,7 +21,7 @@ import {
   listInstalledSkills,
   checkEligibilityDetailed,
   type DiagnosticItem,
-} from "./skills/index.js";
+} from "../skills/index.js";
 
 // ============================================================================
 // Types

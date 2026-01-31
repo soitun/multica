@@ -57,7 +57,7 @@ Frontend (web:3001 / desktop)
         → Agent Engine (LLM runner, sessions, skills, tools)
 ```
 
-**Agent Engine** (`src/agent/`): Orchestrates LLM interactions with multi-provider support (OpenAI, Anthropic, DeepSeek, Kimi, Groq, Mistral, Google, Together). Features session management (JSONL-based, UUIDv7 IDs), profile system (`~/.super-multica/agent-profiles/`), modular skills with hot-reload, and token-aware context window guards (compaction modes: tokens, count, summary).
+**Agent Engine** (`src/agent/`): Orchestrates LLM interactions with multi-provider support (OpenAI, Anthropic, DeepSeek, Kimi, Groq, Mistral, Google, Together). Features session management (JSONL-based, UUIDv7 IDs), profile system (`~/.super-multica/agent-profiles/`), modular skills with hot-reload, and token-aware context window guards (compaction modes: tokens, count, summary). CLI tools are organized in `src/agent/cli/` (interactive, non-interactive, profile, skills, tools).
 
 **Gateway** (`src/gateway/`): NestJS WebSocket server with Socket.io for real-time message passing, RPC request/response, and streaming.
 

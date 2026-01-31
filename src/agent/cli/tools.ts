@@ -10,9 +10,9 @@
  *   pnpm tools:cli profiles                       # Show all profiles
  */
 
-import { createAllTools } from "./tools.js";
-import { filterTools, type ToolsConfig } from "./tools/policy.js";
-import { TOOL_GROUPS, TOOL_PROFILES, expandToolGroups } from "./tools/groups.js";
+import { createAllTools } from "../tools.js";
+import { filterTools, type ToolsConfig } from "../tools/policy.js";
+import { TOOL_GROUPS, TOOL_PROFILES, expandToolGroups } from "../tools/groups.js";
 
 type Command = "list" | "groups" | "profiles" | "help";
 
@@ -109,7 +109,7 @@ function listTools(opts: CliOptions) {
     }
   }
 
-  const filterOpts: import("./tools/policy.js").FilterToolsOptions = {};
+  const filterOpts: import("../tools/policy.js").FilterToolsOptions = {};
   if (config) {
     filterOpts.config = config;
   }

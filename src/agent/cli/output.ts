@@ -1,4 +1,5 @@
 import type { AgentEvent, AgentMessage } from "@mariozechner/pi-agent-core";
+import { colors, createSpinner } from "./colors.js";
 
 export type AgentOutputState = {
   lastAssistantText: string;
@@ -62,9 +63,13 @@ function formatToolArgs(name: string, args: unknown): string {
 }
 
 function formatToolLine(name: string, args: unknown): string {
-  const title = toolDisplayName(name);
+  const title = colors.toolName(toolDisplayName(name));
   const argText = formatToolArgs(name, args);
-  return argText ? `• Used ${title} (${argText})` : `• Used ${title}`;
+  const bullet = colors.toolBullet("•");
+  if (argText) {
+    return `${bullet} ${title} ${colors.toolArgs(`(${argText})`)}`;
+  }
+  return `${bullet} ${title}`;
 }
 
 export function createAgentOutput(params: {
@@ -77,11 +82,20 @@ export function createAgentOutput(params: {
     streaming: false,
   };
 
+  // Create spinner for thinking indicator
+  const spinner = createSpinner({ stream: params.stderr });
+  let pendingToolName = "";
+  let pendingToolArgs: unknown = null;
+
   const handleEvent = (event: AgentEvent) => {
     switch (event.type) {
       case "message_start": {
         const msg = event.message;
         if (msg.role === "assistant") {
+          // Stop any running spinner when assistant starts responding
+          if (spinner.isSpinning()) {
+            spinner.stop();
+          }
           state.streaming = true;
           state.printedLen = 0;
           const text = extractText(msg);
@@ -117,26 +131,39 @@ export function createAgentOutput(params: {
         }
         break;
       }
-      case "tool_execution_start":
-        params.stderr.write(`${formatToolLine(event.toolName, event.args)}\n`);
+      case "tool_execution_start": {
+        pendingToolName = event.toolName;
+        pendingToolArgs = event.args;
+        const title = colors.toolName(toolDisplayName(event.toolName));
+        const argText = formatToolArgs(event.toolName, event.args);
+        const displayText = argText ? `${title} ${colors.toolArgs(`(${argText})`)}` : title;
+        spinner.start(displayText);
         break;
+      }
       case "tool_execution_update": {
         // Show real-time output updates (e.g., from exec tool)
         const updateText = extractText(event.partialResult);
-        if (updateText) {
-          // Clear line and show latest tail output
-          params.stderr.write(`\r\x1b[K  ↳ ${updateText.slice(-60).replace(/\n/g, " ")}`);
+        if (updateText && pendingToolName) {
+          const title = colors.toolName(toolDisplayName(pendingToolName));
+          const preview = colors.toolArgs(updateText.slice(-50).replace(/\n/g, " "));
+          spinner.update(`${title} ${colors.toolArrow("→")} ${preview}`);
         }
         break;
       }
-      case "tool_execution_end":
-        // Clear any update line from tool_execution_update
-        params.stderr.write("\r\x1b[K");
+      case "tool_execution_end": {
+        // Stop spinner and show final result
         if (event.isError) {
           const errorText = extractText(event.result) || "Tool failed";
-          params.stderr.write(`• Tool error (${toolDisplayName(event.toolName)}): ${errorText}\n`);
+          const bullet = colors.toolError("✗");
+          const title = colors.toolName(toolDisplayName(event.toolName));
+          spinner.stop(`${bullet} ${title}: ${colors.toolError(errorText)}`);
+        } else {
+          spinner.stop(formatToolLine(event.toolName, pendingToolArgs));
         }
+        pendingToolName = "";
+        pendingToolArgs = null;
         break;
+      }
       default:
         break;
     }

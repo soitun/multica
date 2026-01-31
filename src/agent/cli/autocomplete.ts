@@ -6,6 +6,7 @@
  */
 
 import * as readline from "readline";
+import { colors } from "./colors.js";
 
 export interface AutocompleteOption {
   value: string;
@@ -26,7 +27,6 @@ const ESC = "\x1b";
 const CLEAR_LINE = `${ESC}[2K`;
 const CURSOR_UP = (n: number) => (n > 0 ? `${ESC}[${n}A` : "");
 const CURSOR_TO_COL = (n: number) => `${ESC}[${n}G`;
-const DIM = `${ESC}[2m`;
 const RESET = `${ESC}[0m`;
 const INVERSE = `${ESC}[7m`;
 const SHOW_CURSOR = `${ESC}[?25h`;
@@ -34,6 +34,12 @@ const SAVE_CURSOR = `${ESC}[s`;
 const RESTORE_CURSOR = `${ESC}[u`;
 const CLEAR_TO_END = `${ESC}[J`;
 const CURSOR_DOWN = (n: number) => (n > 0 ? `${ESC}[${n}B` : "");
+
+// Strip ANSI escape codes to get visual length
+const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
+function stripAnsi(str: string): string {
+  return str.replace(ANSI_REGEX, "");
+}
 
 /**
  * Read a line with real-time autocomplete dropdown
@@ -83,7 +89,8 @@ export function autocompleteInput(config: AutocompleteConfig): Promise<string> {
 
       // Calculate cursor position accounting for line wrapping
       const termWidth = stdout.columns || 80;
-      const cursorOffset = prompt.length + cursorPos;
+      const promptVisualLen = stripAnsi(prompt).length;
+      const cursorOffset = promptVisualLen + cursorPos;
 
       // Handle edge case: when cursor is exactly at line boundary,
       // show it at end of current line, not start of next line
@@ -98,7 +105,7 @@ export function autocompleteInput(config: AutocompleteConfig): Promise<string> {
       }
 
       // Calculate total lines for suggestions positioning
-      const totalLength = prompt.length + input.length;
+      const totalLength = promptVisualLen + input.length;
       const totalLines = Math.ceil(totalLength / termWidth) || 1;
 
       // Get and display suggestions if input starts with /
@@ -118,10 +125,11 @@ export function autocompleteInput(config: AutocompleteConfig): Promise<string> {
           for (let i = 0; i < suggestions.length; i++) {
             const opt = suggestions[i]!;
             const isSelected = i === selectedIndex;
-            const prefix = isSelected ? `${INVERSE}` : `${DIM}`;
-            const suffix = RESET;
-            const label = opt.label ? ` ${DIM}${opt.label}${RESET}` : "";
-            const line = `${prefix}  ${opt.value}${suffix}${label}`;
+            const value = isSelected
+              ? `${INVERSE}  ${opt.value}${RESET}`
+              : `  ${colors.suggestionDim(opt.value)}`;
+            const label = opt.label ? ` ${colors.suggestionLabel(opt.label)}` : "";
+            const line = `${value}${label}`;
 
             stdout.write(`${CLEAR_LINE}${line}`);
             if (i < suggestions.length - 1) {

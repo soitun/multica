@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Agent } from "./runner.js";
+import { Agent } from "../runner.js";
 
 type CliOptions = {
   profile?: string | undefined;
@@ -149,7 +149,7 @@ async function main() {
   }
 
   // Build tools config if any tools options are set
-  let toolsConfig: import("./tools/policy.js").ToolsConfig | undefined;
+  let toolsConfig: import("../tools/policy.js").ToolsConfig | undefined;
   if (opts.toolsProfile || opts.toolsAllow || opts.toolsDeny) {
     toolsConfig = {};
     if (opts.toolsProfile) {

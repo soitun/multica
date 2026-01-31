@@ -1,7 +1,7 @@
 import { Agent as PiAgentCore, type AgentEvent, type AgentMessage } from "@mariozechner/pi-agent-core";
 import { v7 as uuidv7 } from "uuid";
 import type { AgentOptions, AgentRunResult } from "./types.js";
-import { createAgentOutput } from "./output.js";
+import { createAgentOutput } from "./cli/output.js";
 import { resolveModel, resolveTools } from "./tools.js";
 import { SessionManager } from "./session/session-manager.js";
 import { ProfileManager } from "./profile/index.js";
