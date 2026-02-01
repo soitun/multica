@@ -73,6 +73,10 @@ Frontend (web:3001 / desktop)
 - **Backend**: NestJS 11, Socket.io, Pino logging
 - **CLI bundling**: esbuild → `bin/` directory
 
+## Code Style
+
+- **Comments**: Always write code comments in English, regardless of the conversation language.
+
 ## Credentials Setup
 
 Use JSON5 credential files instead of `.env`:
