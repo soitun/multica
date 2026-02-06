@@ -197,6 +197,7 @@ export class Hub {
       const agent = this.agents.get(agentId);
       if (agent && !agent.closed) {
         this.agentSenders.set(agentId, msg.from);
+        this.channelManager.clearLastRoute();
         agent.write(content);
       } else {
         console.warn(`[Hub] Agent not found or closed: ${agentId}`);
@@ -323,12 +324,12 @@ export class Hub {
           content: item.content,
         });
       } else {
-        // Compaction events: forward with synthetic streamId (no stream tracking)
-        const isCompactionEvent =
-          item.type === "compaction_start" || item.type === "compaction_end";
-        if (isCompactionEvent) {
+        // Passthrough events: forward with synthetic streamId (no stream tracking)
+        const isPassthroughEvent =
+          item.type === "compaction_start" || item.type === "compaction_end" || item.type === "agent_error";
+        if (isPassthroughEvent) {
           this.client.send(targetDeviceId, StreamAction, {
-            streamId: `compaction:${agent.sessionId}`,
+            streamId: `system:${agent.sessionId}`,
             agentId: agent.sessionId,
             event: item,
           });
