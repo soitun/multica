@@ -15,22 +15,10 @@ export const PROFILE_FILES = {
   config: "config.json",
 } as const;
 
-/** Available style options for agent personality */
-export const AGENT_STYLES = [
-  "concise",    // 简洁直接
-  "warm",       // 温暖友好
-  "playful",    // 轻松活泼
-  "professional", // 专业正式
-] as const;
-
-export type AgentStyle = (typeof AGENT_STYLES)[number];
-
 /** Profile config.json structure */
 export interface ProfileConfig {
   /** Agent display name */
   name?: string;
-  /** Agent communication style */
-  style?: AgentStyle;
   /** Tools policy configuration */
   tools?: ToolsConfig;
   /** Default LLM provider */

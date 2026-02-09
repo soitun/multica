@@ -40,7 +40,6 @@ export interface SkillInfo {
 export interface ProfileData {
   profileId: string | undefined
   name: string | undefined
-  style: string | undefined
   userContent: string | undefined
 }
 
@@ -92,10 +91,6 @@ export interface LocalChatApproval {
   riskReasons: string[]
   expiresAtMs: number
 }
-
-// Available style options
-export const AGENT_STYLES = ['concise', 'warm', 'playful', 'professional'] as const
-export type AgentStyle = (typeof AGENT_STYLES)[number]
 
 // ============================================================================
 // Expose typed API to Renderer process
@@ -174,7 +169,6 @@ const electronAPI = {
   profile: {
     get: (): Promise<ProfileData> => ipcRenderer.invoke('profile:get'),
     updateName: (name: string) => ipcRenderer.invoke('profile:updateName', name),
-    updateStyle: (style: string) => ipcRenderer.invoke('profile:updateStyle', style),
     updateUser: (content: string) => ipcRenderer.invoke('profile:updateUser', content),
   },
 

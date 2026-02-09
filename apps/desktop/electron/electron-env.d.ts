@@ -81,7 +81,6 @@ interface SkillAddResult {
 interface ProfileData {
   profileId: string | undefined
   name: string | undefined
-  style: string | undefined
   userContent: string | undefined
 }
 
@@ -177,7 +176,6 @@ interface ElectronAPI {
   profile: {
     get: () => Promise<ProfileData>
     updateName: (name: string) => Promise<unknown>
-    updateStyle: (style: string) => Promise<unknown>
     updateUser: (content: string) => Promise<unknown>
   }
   provider: {

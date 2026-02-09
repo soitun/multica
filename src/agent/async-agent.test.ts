@@ -58,10 +58,6 @@ vi.mock("./runner.js", () => ({
       return undefined;
     }
     setUserContent() {}
-    getAgentStyle() {
-      return undefined;
-    }
-    setAgentStyle() {}
     reloadSystemPrompt() {}
     getProviderInfo() {
       return { provider: "test", model: "test-model" };

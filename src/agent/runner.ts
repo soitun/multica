@@ -752,20 +752,6 @@ export class Agent {
   }
 
   /**
-   * Get agent communication style from profile config.
-   */
-  getAgentStyle(): string | undefined {
-    return this.profile?.getStyle();
-  }
-
-  /**
-   * Update agent communication style in profile config.
-   */
-  setAgentStyle(style: string): void {
-    this.profile?.updateStyle(style);
-  }
-
-  /**
    * Get current provider and model information.
    */
   getProviderInfo(): { provider: string; model: string | undefined } {
