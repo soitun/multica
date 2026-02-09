@@ -120,51 +120,6 @@ export const telegramChannel: ChannelPlugin = {
         });
       });
 
-      // Handle voice messages — forward as <media:audio> placeholder
-      bot.on("message:voice", (ctx) => {
-        const msg = ctx.message;
-        const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
-
-        // In groups, only respond if replied to the bot
-        if (isGroup) {
-          const isReplyToBot = msg.reply_to_message?.from?.is_bot === true;
-          if (!isReplyToBot) return;
-        }
-
-        console.log(`[Telegram] Received voice message: chatId=${msg.chat.id} from=${msg.from?.id} duration=${msg.voice.duration}s`);
-
-        const caption = msg.caption ? ` ${msg.caption}` : "";
-        onMessage({
-          messageId: String(msg.message_id),
-          conversationId: String(msg.chat.id),
-          senderId: String(msg.from?.id ?? "unknown"),
-          text: `<media:audio>${caption}`,
-          chatType: isGroup ? "group" : "direct",
-        });
-      });
-
-      // Handle audio file messages (music files, etc.)
-      bot.on("message:audio", (ctx) => {
-        const msg = ctx.message;
-        const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
-
-        if (isGroup) {
-          const isReplyToBot = msg.reply_to_message?.from?.is_bot === true;
-          if (!isReplyToBot) return;
-        }
-
-        console.log(`[Telegram] Received audio file: chatId=${msg.chat.id} from=${msg.from?.id} title=${msg.audio.title ?? "unknown"}`);
-
-        const caption = msg.caption ? ` ${msg.caption}` : "";
-        onMessage({
-          messageId: String(msg.message_id),
-          conversationId: String(msg.chat.id),
-          senderId: String(msg.from?.id ?? "unknown"),
-          text: `<media:audio>${caption}`,
-          chatType: isGroup ? "group" : "direct",
-        });
-      });
-
       // Graceful shutdown on abort
       signal.addEventListener("abort", () => {
         console.log("[Telegram] Bot stopped");
