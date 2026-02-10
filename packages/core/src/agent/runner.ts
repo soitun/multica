@@ -39,8 +39,8 @@ import {
 } from "./system-prompt/index.js";
 import type { AuthProfileFailureReason } from "./auth-profiles/index.js";
 import {
-  repairToolCallInputs,
-  repairToolUseResultPairing,
+  sanitizeToolCallInputs,
+  sanitizeToolUseResultPairing,
 } from "./session/session-transcript-repair.js";
 
 // ============================================================
@@ -73,10 +73,6 @@ export function classifyError(error: unknown): AuthProfileFailureReason {
 export function isRotatableError(reason: AuthProfileFailureReason): boolean {
   // timeout is rotatable because some providers hang on rate limit instead of returning 429
   return reason === "auth" || reason === "rate_limit" || reason === "billing" || reason === "timeout";
-}
-
-function shouldInjectInvalidToolCallIdForDebug(): boolean {
-  return process.env.MULTICA_DEBUG_INJECT_INVALID_TOOL_CALL_ID === "1";
 }
 
 export class Agent {
@@ -190,43 +186,8 @@ export class Agent {
         return this.currentApiKey;
       },
       transformContext: async (messages) => {
-        let workingMessages = messages;
-
-        // Debug-only fault injection:
-        // Simulate a poisoned transcript with an empty toolCallId so we can
-        // verify sanitize logic prevents provider-side tool_call_id failures.
-        if (shouldInjectInvalidToolCallIdForDebug()) {
-          workingMessages = [
-            ...workingMessages,
-            {
-              role: "toolResult",
-              toolCallId: "",
-              toolName: "debug-invalid-tool-call-id",
-              content: [{ type: "text", text: "[debug] injected invalid toolCallId" }],
-              isError: true,
-              timestamp: Date.now(),
-            } as AgentMessage,
-          ];
-        }
-
-        const inputRepair = repairToolCallInputs(workingMessages);
-        const pairingRepair = repairToolUseResultPairing(inputRepair.messages);
-
-        if (
-          shouldInjectInvalidToolCallIdForDebug()
-          || inputRepair.droppedToolCalls > 0
-          || pairingRepair.droppedOrphanCount > 0
-          || pairingRepair.droppedDuplicateCount > 0
-        ) {
-          console.error(
-            `[Agent] context sanitize: droppedToolCalls=${inputRepair.droppedToolCalls}, ` +
-            `droppedOrphanToolResults=${pairingRepair.droppedOrphanCount}, ` +
-            `droppedDuplicateToolResults=${pairingRepair.droppedDuplicateCount}, ` +
-            `insertedMissingToolResults=${pairingRepair.added.length}`,
-          );
-        }
-
-        return pairingRepair.messages;
+        const sanitizedInputs = sanitizeToolCallInputs(messages);
+        return sanitizeToolUseResultPairing(sanitizedInputs);
       },
     });
 
