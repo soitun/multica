@@ -155,7 +155,7 @@ async function main() {
   }
 
   // Build tools config if any tools options are set
-  let toolsConfig: import("../tools/policy.js").ToolsConfig | undefined;
+  let toolsConfig: import("@multica/core").ToolsConfig | undefined;
   if (opts.toolsAllow || opts.toolsDeny) {
     toolsConfig = {};
     if (opts.toolsAllow) {

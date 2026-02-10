@@ -108,7 +108,7 @@ function cmdList(opts: ToolsOptions) {
     }
   }
 
-  const filterOpts: import("../../tools/policy.js").FilterToolsOptions = {};
+  const filterOpts: import("@multica/core").FilterToolsOptions = {};
   if (config) {
     filterOpts.config = config;
   }
