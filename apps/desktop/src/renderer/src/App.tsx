@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createHashRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from './components/theme-provider'
 import { TooltipProvider } from '@multica/ui/components/ui/tooltip'
@@ -51,14 +51,42 @@ const router = createHashRouter([
 ])
 
 export default function App() {
+  const [isHydrated, setIsHydrated] = useState(false)
+  const setCompleted = useOnboardingStore((s) => s.setCompleted)
+
   useEffect(() => {
+    // Load onboarding state from file system
+    async function hydrateOnboardingState() {
+      try {
+        const completed = await window.electronAPI.appState.getOnboardingCompleted()
+        setCompleted(completed)
+      } catch (err) {
+        console.error('[App] Failed to load onboarding state:', err)
+        // Default to false if load fails
+        setCompleted(false)
+      } finally {
+        setIsHydrated(true)
+      }
+    }
+
+    hydrateOnboardingState()
+
     // Prefetch global data at app startup
     useProviderStore.getState().fetch()
     useChannelsStore.getState().fetch()
     useSkillsStore.getState().fetch()
     useToolsStore.getState().fetch()
     useCronJobsStore.getState().fetch()
-  }, [])
+  }, [setCompleted])
+
+  // Show nothing while loading onboarding state to prevent flash
+  if (!isHydrated) {
+    return (
+      <ThemeProvider defaultTheme="system" storageKey="multica-theme">
+        <div className="h-dvh bg-background" />
+      </ThemeProvider>
+    )
+  }
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="multica-theme">

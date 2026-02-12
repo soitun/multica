@@ -15,8 +15,8 @@ export default function OnboardingPage() {
   const { currentStep, nextStep, prevStep, completeOnboarding } =
     useOnboardingStore();
 
-  const handleComplete = () => {
-    completeOnboarding();
+  const handleComplete = async () => {
+    await completeOnboarding();
     navigate("/");
   };
 
@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
         {/* Brand */}
         <div className="flex items-center gap-2 shrink-0">
-          <MulticaIcon className="size-4 text-muted-foreground/70" />
+          <MulticaIcon bordered noSpin />
           <span className="text-sm tracking-wide font-brand">Multica</span>
         </div>
 

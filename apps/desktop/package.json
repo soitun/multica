@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:onboarding": "electron-vite dev -- --force-onboarding",
     "build": "electron-vite build && electron-builder",
     "preview": "electron-vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"

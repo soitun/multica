@@ -96,7 +96,14 @@ export function DeviceList() {
   }
 
   if (devices.length === 0) {
-    return null
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center">
+        <Smartphone className="size-8 text-muted-foreground/40 mb-3" />
+        <p className="text-sm text-muted-foreground">
+          No devices connected yet.
+        </p>
+      </div>
+    )
   }
 
   return (

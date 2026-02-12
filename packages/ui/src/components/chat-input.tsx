@@ -19,10 +19,12 @@ interface ChatInputProps {
   onSubmit?: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Initial value to pre-fill the input */
+  defaultValue?: string;
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
-  function ChatInput({ onSubmit, disabled, placeholder = "Type a message..." }, ref) {
+  function ChatInput({ onSubmit, disabled, placeholder = "Type a message...", defaultValue }, ref) {
     // Use ref to avoid stale closure in Tiptap keydown handler
     const onSubmitRef = useRef(onSubmit);
     onSubmitRef.current = onSubmit;
@@ -45,6 +47,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         }),
         Placeholder.configure({ placeholder }),
       ],
+      content: defaultValue ? `<p>${defaultValue}</p>` : "",
       immediatelyRender: false,
       // Scroll cursor into view on every content change (e.g., Shift+Enter newlines)
       onUpdate({ editor }) {

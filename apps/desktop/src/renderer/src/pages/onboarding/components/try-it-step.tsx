@@ -32,18 +32,17 @@ const tryPrompts = [
 ]
 
 interface TryItStepProps {
-  onComplete: () => void
+  onComplete: () => void | Promise<void>
   onBack: () => void
 }
 
 export default function TryItStep({ onComplete, onBack }: TryItStepProps) {
   const navigate = useNavigate()
 
-  const handlePromptClick = (prompt: string) => {
+  const handlePromptClick = async (prompt: string) => {
     console.log('[TryItStep] Selected prompt:', prompt)
-    // TODO: Pass prompt to chat page
-    onComplete()
-    navigate('/chat')
+    await onComplete()
+    navigate(`/chat?prompt=${encodeURIComponent(prompt)}`)
   }
 
   return (
@@ -61,7 +60,7 @@ export default function TryItStep({ onComplete, onBack }: TryItStepProps) {
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Ready to go
+            🎉 Ready to go
           </h1>
           <p className="text-sm text-muted-foreground">
             Your agent is ready. Try a sample task or dive right in.

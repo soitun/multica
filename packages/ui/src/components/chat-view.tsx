@@ -41,6 +41,8 @@ export interface ChatViewProps {
   onDisconnect?: () => void;
   /** Optional action button in the error banner (e.g. "Configure Provider") */
   errorAction?: { label: string; onClick: () => void };
+  /** Initial prompt to pre-fill the input (e.g., from onboarding) */
+  initialPrompt?: string;
 }
 
 export function ChatView({
@@ -57,6 +59,7 @@ export function ChatView({
   resolveApproval,
   onDisconnect,
   errorAction,
+  initialPrompt,
 }: ChatViewProps) {
   const mainRef = useRef<HTMLElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -259,6 +262,7 @@ export function ChatView({
           onSubmit={sendMessage}
           disabled={isLoading || (!!error && error.code !== 'AGENT_ERROR')}
           placeholder={error && error.code !== 'AGENT_ERROR' ? "Connection error" : "Ask your Agent..."}
+          defaultValue={initialPrompt}
         />
       </footer>
     </div>

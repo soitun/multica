@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Loading } from '@multica/ui/components/ui/loading'
 import { ChatView } from '@multica/ui/components/chat-view'
 import { useLocalChat } from '../hooks/use-local-chat'
@@ -6,7 +7,12 @@ import { useProviderStore } from '../stores/provider'
 import { ApiKeyDialog } from './api-key-dialog'
 import { OAuthDialog } from './oauth-dialog'
 
-export function LocalChat() {
+interface LocalChatProps {
+  initialPrompt?: string
+}
+
+export function LocalChat({ initialPrompt }: LocalChatProps) {
+  const navigate = useNavigate()
   const {
     agentId,
     initError,
@@ -55,6 +61,21 @@ export function LocalChat() {
 
   // Derive provider info for dialogs
   const currentMeta = current ? providers.find((p) => p.id === current.provider) : null
+
+  // Auto-send initial prompt after a short delay
+  const hasSentInitialPrompt = useRef(false)
+  useEffect(() => {
+    if (!agentId || !initialPrompt || hasSentInitialPrompt.current) return
+
+    const timer = setTimeout(() => {
+      hasSentInitialPrompt.current = true
+      sendMessage(initialPrompt)
+      // Remove prompt from URL to prevent re-sending on back navigation
+      navigate('/chat', { replace: true })
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [agentId, initialPrompt, sendMessage, navigate])
 
   if (initError) {
     return (

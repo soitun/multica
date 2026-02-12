@@ -563,7 +563,7 @@ export default function HomePage() {
           {/* Left: Connect */}
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium">Remote Access</h3>
+              <h3 className="text-sm font-medium">Control from Anywhere</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -573,8 +573,8 @@ export default function HomePage() {
                 {qrCodeExpanded ? 'Hide' : 'Show'}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Scan with your phone to connect remotely.
+            <p className="text-sm text-muted-foreground pl-0.5">
+              Open Multica Web on your phone and scan. Operate your computer and use your agent remotely.
             </p>
 
             {/* QR Code Container */}

@@ -1,12 +1,13 @@
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@multica/ui/components/ui/button'
+import { MulticaIcon } from '@multica/ui/components/multica-icon'
 import {
   Home,
   MessageSquare,
   Puzzle,
   Wrench,
-  Mail,
-  Repeat,
+  Radio,
+  Clock,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
@@ -36,8 +37,8 @@ const mainNavItems = [
 const configNavItems = [
   { path: '/skills', label: 'Skills', icon: Puzzle },
   { path: '/tools', label: 'Tools', icon: Wrench },
-  { path: '/channels', label: 'Channels', icon: Mail },
-  { path: '/crons', label: 'Crons', icon: Repeat },
+  { path: '/channels', label: 'Channels', icon: Radio },
+  { path: '/crons', label: 'Crons', icon: Clock },
 ]
 
 // All nav items for header lookup
@@ -134,6 +135,12 @@ export default function Layout() {
         </SidebarHeader>
 
         <SidebarContent>
+          {/* Brand */}
+          <div className="flex items-center gap-2 px-3 py-2">
+            <MulticaIcon bordered noSpin />
+            <span className="text-sm font-brand">Multica</span>
+          </div>
+
           {/* Main navigation */}
           <SidebarGroup>
             <SidebarMenu className="space-y-0.5">
