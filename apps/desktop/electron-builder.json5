@@ -19,9 +19,7 @@
   ],
     "mac": {
     "hardenedRuntime": true,
-    "notarize": {
-      "teamId": ""
-    },
+    "notarize": true,
     "target": [
       "dmg",
       "zip"

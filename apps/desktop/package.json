@@ -1,7 +1,7 @@
 {
   "name": "@multica/desktop",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Multica Desktop - AI Agent Hub",
   "author": "Multica AI <dev@multica.ai>",
   "homepage": "https://github.com/multica-ai/super-multica",
