@@ -215,8 +215,8 @@ func (h *Handler) UpdateWorkspace(w http.ResponseWriter, r *http.Request) {
 		params.Settings = s
 	}
 	if req.Repos != nil {
-		r, _ := json.Marshal(req.Repos)
-		params.Repos = r
+		reposJSON, _ := json.Marshal(req.Repos)
+		params.Repos = reposJSON
 	}
 
 	ws, err := h.Queries.UpdateWorkspace(r.Context(), params)

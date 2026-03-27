@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/multica-ai/multica/server/internal/cli"
@@ -122,7 +123,7 @@ func TestResolveAssignee(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected error for ambiguous match")
 		}
-		if got := err.Error(); !contains(got, "ambiguous") {
+		if got := err.Error(); !strings.Contains(got, "ambiguous") {
 			t.Errorf("expected ambiguous error, got: %s", got)
 		}
 	})
@@ -156,15 +157,3 @@ func TestValidIssueStatuses(t *testing.T) {
 	}
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && searchString(s, substr)
-}
-
-func searchString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}

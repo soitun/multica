@@ -54,11 +54,6 @@ WHERE issue_id = $1 AND status IN ('queued', 'dispatched', 'running');
 SELECT * FROM agent_task_queue
 WHERE id = $1;
 
--- name: CreateAgentTaskWithContext :one
-INSERT INTO agent_task_queue (agent_id, runtime_id, issue_id, status, priority, context)
-VALUES ($1, $2, $3, 'queued', $4, $5)
-RETURNING *;
-
 -- name: ClaimAgentTask :one
 UPDATE agent_task_queue
 SET status = 'dispatched', dispatched_at = now()

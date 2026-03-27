@@ -584,9 +584,15 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string) (TaskR
 
 	prompt := BuildPrompt(task)
 
+	// Pass the daemon's auth credentials so the spawned agent CLI can call
+	// the Multica API (e.g. `multica issue get`, `multica issue comment add`).
 	backend, err := agent.New(provider, agent.Config{
 		ExecutablePath: entry.Path,
-		Logger:         d.logger,
+		Env: map[string]string{
+			"MULTICA_TOKEN":      d.client.Token(),
+			"MULTICA_SERVER_URL": d.cfg.ServerBaseURL,
+		},
+		Logger: d.logger,
 	})
 	if err != nil {
 		return TaskResult{}, fmt.Errorf("create agent backend: %w", err)

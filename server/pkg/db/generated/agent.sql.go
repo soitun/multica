@@ -201,47 +201,6 @@ func (q *Queries) CreateAgentTask(ctx context.Context, arg CreateAgentTaskParams
 	return i, err
 }
 
-const createAgentTaskWithContext = `-- name: CreateAgentTaskWithContext :one
-INSERT INTO agent_task_queue (agent_id, runtime_id, issue_id, status, priority, context)
-VALUES ($1, $2, $3, 'queued', $4, $5)
-RETURNING id, agent_id, issue_id, status, priority, dispatched_at, started_at, completed_at, result, error, created_at, context, runtime_id
-`
-
-type CreateAgentTaskWithContextParams struct {
-	AgentID   pgtype.UUID `json:"agent_id"`
-	RuntimeID pgtype.UUID `json:"runtime_id"`
-	IssueID   pgtype.UUID `json:"issue_id"`
-	Priority  int32       `json:"priority"`
-	Context   []byte      `json:"context"`
-}
-
-func (q *Queries) CreateAgentTaskWithContext(ctx context.Context, arg CreateAgentTaskWithContextParams) (AgentTaskQueue, error) {
-	row := q.db.QueryRow(ctx, createAgentTaskWithContext,
-		arg.AgentID,
-		arg.RuntimeID,
-		arg.IssueID,
-		arg.Priority,
-		arg.Context,
-	)
-	var i AgentTaskQueue
-	err := row.Scan(
-		&i.ID,
-		&i.AgentID,
-		&i.IssueID,
-		&i.Status,
-		&i.Priority,
-		&i.DispatchedAt,
-		&i.StartedAt,
-		&i.CompletedAt,
-		&i.Result,
-		&i.Error,
-		&i.CreatedAt,
-		&i.Context,
-		&i.RuntimeID,
-	)
-	return i, err
-}
-
 const deleteAgent = `-- name: DeleteAgent :exec
 DELETE FROM agent WHERE id = $1
 `
