@@ -7,11 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
 	"github.com/multica-ai/multica/server/internal/util"
@@ -140,11 +142,42 @@ func requireUserID(w http.ResponseWriter, r *http.Request) (string, bool) {
 }
 
 func resolveWorkspaceID(r *http.Request) string {
+	// Prefer context value set by workspace middleware.
+	if id := middleware.WorkspaceIDFromContext(r.Context()); id != "" {
+		return id
+	}
 	workspaceID := r.URL.Query().Get("workspace_id")
 	if workspaceID != "" {
 		return workspaceID
 	}
 	return r.Header.Get("X-Workspace-ID")
+}
+
+// ctxMember returns the workspace member from context (set by workspace middleware).
+func ctxMember(ctx context.Context) (db.Member, bool) {
+	return middleware.MemberFromContext(ctx)
+}
+
+// ctxWorkspaceID returns the workspace ID from context (set by workspace middleware).
+func ctxWorkspaceID(ctx context.Context) string {
+	return middleware.WorkspaceIDFromContext(ctx)
+}
+
+// workspaceIDFromURL returns the workspace ID from context (preferred) or chi URL param (fallback).
+func workspaceIDFromURL(r *http.Request, param string) string {
+	if id := middleware.WorkspaceIDFromContext(r.Context()); id != "" {
+		return id
+	}
+	return chi.URLParam(r, param)
+}
+
+// workspaceMember returns the member from middleware context, or falls back to a DB
+// lookup when the handler is called directly (e.g. in tests).
+func (h *Handler) workspaceMember(w http.ResponseWriter, r *http.Request, workspaceID string) (db.Member, bool) {
+	if m, ok := ctxMember(r.Context()); ok {
+		return m, true
+	}
+	return h.requireWorkspaceMember(w, r, workspaceID, "workspace not found")
 }
 
 func roleAllowed(role string, roles ...string) bool {
