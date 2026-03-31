@@ -12,7 +12,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import Typography from "@tiptap/extension-typography";
 import Mention from "@tiptap/extension-mention";
-import { Markdown } from "tiptap-markdown";
+import { Markdown } from "@tiptap/markdown";
 import { Extension } from "@tiptap/core";
 import { cn } from "@/lib/utils";
 import { createMentionSuggestion } from "./mention-suggestion";
@@ -184,11 +184,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
         LinkExtension,
         Typography,
         MentionExtension,
-        Markdown.configure({
-          html: false,
-          transformPastedText: true,
-          transformCopiedText: true,
-        }),
+        Markdown,
         createSubmitExtension(() => onSubmitRef.current?.()),
       ],
       onUpdate: ({ editor: ed }) => {
