@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { ALL_STATUSES, STATUS_CONFIG } from "@/features/issues/config";
-import { useIssueViewStore } from "@/features/issues/stores/view-store";
+import { useIssueViewStore, type SortField, type SortDirection } from "@/features/issues/stores/view-store";
 import { StatusIcon } from "./status-icon";
 import { BoardColumn } from "./board-column";
 import { BoardCardContent } from "./board-card";
@@ -71,6 +71,7 @@ export function BoardView({
   ) => void;
 }) {
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
+  const prevSortRef = useRef<{ sortBy: SortField; sortDirection: SortDirection } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -92,14 +93,35 @@ export function BoardView({
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       const issue = issues.find((i) => i.id === event.active.id);
-      if (issue) setActiveIssue(issue);
+      if (issue) {
+        // Auto-switch to position sort so visual order matches position order,
+        // ensuring correct position calculation during drag.
+        const viewState = useIssueViewStore.getState();
+        if (viewState.sortBy !== "position" || viewState.sortDirection !== "asc") {
+          prevSortRef.current = { sortBy: viewState.sortBy, sortDirection: viewState.sortDirection };
+          viewState.setSortBy("position");
+          viewState.setSortDirection("asc");
+        }
+        setActiveIssue(issue);
+      }
     },
     [issues]
   );
 
+  const handleDragCancel = useCallback(() => {
+    setActiveIssue(null);
+    if (prevSortRef.current) {
+      const { sortBy, sortDirection } = prevSortRef.current;
+      prevSortRef.current = null;
+      useIssueViewStore.getState().setSortBy(sortBy);
+      useIssueViewStore.getState().setSortDirection(sortDirection);
+    }
+  }, []);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveIssue(null);
+      prevSortRef.current = null;
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
@@ -169,6 +191,7 @@ export function BoardView({
       collisionDetection={kanbanCollision}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="flex flex-1 min-h-0 gap-4 overflow-x-auto p-4">
         {visibleStatuses.map((status) => (
