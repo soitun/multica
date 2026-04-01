@@ -198,6 +198,9 @@ func (h *Handler) commentMentionsOthersButNotAssignee(content string, issue db.I
 	}
 	assigneeID := uuidToString(issue.AssigneeID)
 	for _, m := range mentions {
+		if m.IsMentionAll() {
+			return false // @all includes everyone — allow trigger
+		}
 		if m.ID == assigneeID {
 			return false // Assignee is mentioned — allow trigger
 		}

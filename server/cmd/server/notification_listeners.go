@@ -14,8 +14,8 @@ import (
 
 // mention represents a parsed @mention from markdown content (local alias).
 type mention struct {
-	Type string // "member" or "agent"
-	ID   string // user_id or agent_id
+	Type string // "member", "agent", or "all"
+	ID   string // user_id, agent_id, or "all"
 }
 
 // statusLabels maps DB status values to human-readable labels for notifications.
@@ -193,7 +193,8 @@ func notifyDirect(
 }
 
 // notifyMentionedMembers creates inbox items for each @mentioned member,
-// excluding the actor and any IDs in the skip set.
+// excluding the actor and any IDs in the skip set. When an @all mention is
+// present, all workspace members are notified (excluding agents).
 func notifyMentionedMembers(
 	bus *events.Bus,
 	queries *db.Queries,
@@ -206,17 +207,40 @@ func notifyMentionedMembers(
 	skip map[string]bool,
 	details []byte,
 ) {
+	// Collect the set of member IDs to notify.
+	recipientIDs := map[string]bool{}
+
+	hasAll := false
 	for _, m := range mentions {
-		if m.Type != "member" {
+		if m.Type == "all" {
+			hasAll = true
 			continue
 		}
-		if m.ID == e.ActorID || skip[m.ID] {
+		if m.Type == "member" {
+			recipientIDs[m.ID] = true
+		}
+	}
+
+	// If @all is present, expand to all workspace members.
+	if hasAll {
+		members, err := queries.ListMembers(context.Background(), parseUUID(e.WorkspaceID))
+		if err != nil {
+			slog.Error("failed to list members for @all mention", "workspace_id", e.WorkspaceID, "error", err)
+		} else {
+			for _, m := range members {
+				recipientIDs[util.UUIDToString(m.UserID)] = true
+			}
+		}
+	}
+
+	for id := range recipientIDs {
+		if id == e.ActorID || skip[id] {
 			continue
 		}
 		item, err := queries.CreateInboxItem(context.Background(), db.CreateInboxItemParams{
 			WorkspaceID:   parseUUID(e.WorkspaceID),
 			RecipientType: "member",
-			RecipientID:   parseUUID(m.ID),
+			RecipientID:   parseUUID(id),
 			Type:          "mentioned",
 			Severity:      "info",
 			IssueID:       parseUUID(issueID),
@@ -226,7 +250,7 @@ func notifyMentionedMembers(
 			Details:       details,
 		})
 		if err != nil {
-			slog.Error("mention inbox creation failed", "mentioned_id", m.ID, "error", err)
+			slog.Error("mention inbox creation failed", "mentioned_id", id, "error", err)
 			continue
 		}
 		resp := inboxItemToResponse(item)

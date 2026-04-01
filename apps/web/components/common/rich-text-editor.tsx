@@ -103,7 +103,7 @@ const MentionExtension = Mention.configure({
       return {
         type: "mention",
         raw: match[0],
-        attributes: { label: match[1], type: match[2], id: match[3] },
+        attributes: { label: match[1], type: match[2] ?? "member", id: match[3] },
       };
     },
   },

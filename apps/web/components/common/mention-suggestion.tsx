@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Hash } from "lucide-react";
+import { Hash, Users } from "lucide-react";
 import { ReactRenderer } from "@tiptap/react";
 import { computePosition, offset, flip, shift } from "@floating-ui/dom";
 import { useWorkspaceStore } from "@/features/workspace";
@@ -23,7 +23,7 @@ import type { SuggestionOptions, SuggestionProps } from "@tiptap/suggestion";
 export interface MentionItem {
   id: string;
   label: string;
-  type: "member" | "agent" | "issue";
+  type: "member" | "agent" | "issue" | "all";
   /** Secondary text shown below the label (e.g. issue title) */
   description?: string;
 }
@@ -99,7 +99,11 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
             }`}
             onClick={() => selectItem(index)}
           >
-            {item.type === "issue" ? (
+            {item.type === "all" ? (
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Users className="h-3 w-3" />
+              </span>
+            ) : item.type === "issue" ? (
               <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Hash className="h-3 w-3" />
               </span>
@@ -137,6 +141,12 @@ export function createMentionSuggestion(): Omit<
       const { issues } = useIssueStore.getState();
       const q = query.toLowerCase();
 
+      // Show "All members" option when query is empty or matches "all"
+      const allItem: MentionItem[] =
+        "all members".includes(q) || "all".includes(q)
+          ? [{ id: "all", label: "All members", type: "all" as const, description: "Notify all members" }]
+          : [];
+
       const memberItems: MentionItem[] = members
         .filter((m) => m.name.toLowerCase().includes(q))
         .map((m) => ({
@@ -162,7 +172,7 @@ export function createMentionSuggestion(): Omit<
           description: i.title,
         }));
 
-      return [...memberItems, ...agentItems, ...issueItems].slice(0, 10);
+      return [...allItem, ...memberItems, ...agentItems, ...issueItems].slice(0, 10);
     },
 
     render: () => {
