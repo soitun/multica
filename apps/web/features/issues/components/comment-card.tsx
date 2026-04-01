@@ -195,7 +195,7 @@ function CommentRow({
             <Markdown mode="minimal">{entry.content ?? ""}</Markdown>
           </div>
           {entry.attachments && entry.attachments.length > 0 && (
-            <AttachmentList attachments={entry.attachments} className="mt-1.5 pl-8" />
+            <AttachmentList attachments={entry.attachments} content={entry.content ?? undefined} className="mt-1.5 pl-8" />
           )}
           {!isTemp && (
             <ReactionBar
@@ -395,7 +395,7 @@ function CommentCard({
                   <Markdown mode="minimal">{entry.content ?? ""}</Markdown>
                 </div>
                 {entry.attachments && entry.attachments.length > 0 && (
-                  <AttachmentList attachments={entry.attachments} className="mt-1.5 pl-10" />
+                  <AttachmentList attachments={entry.attachments} content={entry.content ?? undefined} className="mt-1.5 pl-10" />
                 )}
                 {!isTemp && (
                   <ReactionBar

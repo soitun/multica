@@ -96,14 +96,20 @@ function FileChip({ attachment }: { attachment: Attachment }) {
 
 interface AttachmentListProps {
   attachments: Attachment[];
+  /** Markdown content — images whose URL appears in this text are hidden to avoid duplication. */
+  content?: string;
   className?: string;
 }
 
-export function AttachmentList({ attachments, className }: AttachmentListProps) {
+export function AttachmentList({ attachments, content, className }: AttachmentListProps) {
   if (!attachments?.length) return null;
 
-  const images = attachments.filter((a) => a.content_type.startsWith("image/"));
+  const images = attachments.filter(
+    (a) => a.content_type.startsWith("image/") && !(content && content.includes(a.url)),
+  );
   const files = attachments.filter((a) => !a.content_type.startsWith("image/"));
+
+  if (images.length === 0 && files.length === 0) return null;
 
   return (
     <div className={cn("space-y-2", className)}>

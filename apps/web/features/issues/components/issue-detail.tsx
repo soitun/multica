@@ -581,7 +581,7 @@ export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layo
           </div>
 
           {issue.attachments && issue.attachments.length > 0 && (
-            <AttachmentList attachments={issue.attachments} className="mt-4" />
+            <AttachmentList attachments={issue.attachments} content={issue.description ?? undefined} className="mt-4" />
           )}
 
           <div className="my-8 border-t" />
