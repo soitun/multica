@@ -99,9 +99,9 @@ function createComponents(
     ),
     // Links: Make clickable with callbacks, or render as mention
     a: ({ href, children }) => {
-      // Mention links: mention://member/id, mention://agent/id, mention://issue/id
+      // Mention links: mention://member/id, mention://agent/id, mention://issue/id, mention://all/all
       if (href?.startsWith('mention://')) {
-        const mentionMatch = href.match(/^mention:\/\/(member|agent|issue)\/(.+)$/)
+        const mentionMatch = href.match(/^mention:\/\/(member|agent|issue|all)\/(.+)$/)
         if (mentionMatch?.[1] === 'issue' && mentionMatch[2]) {
           const label = typeof children === 'string' ? children : Array.isArray(children) ? children.join('') : undefined
           return <IssueMentionCard issueId={mentionMatch[2]} fallbackLabel={label} />

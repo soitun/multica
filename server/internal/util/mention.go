@@ -4,12 +4,17 @@ import "regexp"
 
 // Mention represents a parsed @mention from markdown content.
 type Mention struct {
-	Type string // "member" or "agent"
-	ID   string // user_id or agent_id
+	Type string // "member", "agent", or "all"
+	ID   string // user_id, agent_id, or "all"
 }
 
 // MentionRe matches [@Label](mention://type/id) in markdown.
-var MentionRe = regexp.MustCompile(`\[@[^\]]*\]\(mention://(member|agent)/([0-9a-fA-F-]+)\)`)
+var MentionRe = regexp.MustCompile(`\[@[^\]]*\]\(mention://(member|agent|all)/([0-9a-fA-F-]+|all)\)`)
+
+// IsMentionAll returns true if the mention is an @all mention.
+func (m Mention) IsMentionAll() bool {
+	return m.Type == "all"
+}
 
 // ParseMentions extracts deduplicated mentions from markdown content.
 func ParseMentions(content string) []Mention {
@@ -25,4 +30,14 @@ func ParseMentions(content string) []Mention {
 		result = append(result, Mention{Type: m[1], ID: m[2]})
 	}
 	return result
+}
+
+// HasMentionAll returns true if any mention in the slice is an @all mention.
+func HasMentionAll(mentions []Mention) bool {
+	for _, m := range mentions {
+		if m.IsMentionAll() {
+			return true
+		}
+	}
+	return false
 }

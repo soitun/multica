@@ -275,7 +275,7 @@ func (h *Handler) CreateAgent(w http.ResponseWriter, r *http.Request) {
 
 	triggers, _ := json.Marshal(req.Triggers)
 	if req.Triggers == nil {
-		triggers = []byte("[]")
+		triggers = defaultAgentTriggers()
 	}
 
 	agent, err := h.Queries.CreateAgent(r.Context(), db.CreateAgentParams{
