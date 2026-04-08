@@ -780,6 +780,23 @@ export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layo
           </div>
 
           {/* Sub-issues — Linear-style */}
+          {childIssues.length === 0 && (
+            <div className="mt-6">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() =>
+                  useModalStore.getState().open("create-issue", {
+                    parent_issue_id: issue.id,
+                    parent_issue_identifier: issue.identifier,
+                  })
+                }
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add sub-issues</span>
+              </button>
+            </div>
+          )}
           {childIssues.length > 0 && (() => {
             const doneCount = childIssues.filter((c) => c.status === "done").length;
             return (
