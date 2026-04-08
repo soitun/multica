@@ -295,7 +295,10 @@ describe("IssuesPage", () => {
   });
 
   it("renders issues in board view after loading", async () => {
-    mockListIssues.mockResolvedValue({ issues: mockIssues, total: mockIssues.length });
+    // issueListOptions makes 2 calls: open_only + closed page. Return issues for open, empty for closed.
+    mockListIssues.mockImplementation((params: any) =>
+      Promise.resolve(params?.open_only ? { issues: mockIssues, total: mockIssues.length } : { issues: [], total: 0 }),
+    );
 
     renderWithQuery(<IssuesPage />);
 
@@ -305,7 +308,9 @@ describe("IssuesPage", () => {
   });
 
   it("renders board columns", async () => {
-    mockListIssues.mockResolvedValue({ issues: mockIssues, total: mockIssues.length });
+    mockListIssues.mockImplementation((params: any) =>
+      Promise.resolve(params?.open_only ? { issues: mockIssues, total: mockIssues.length } : { issues: [], total: 0 }),
+    );
 
     renderWithQuery(<IssuesPage />);
 
@@ -331,11 +336,12 @@ describe("IssuesPage", () => {
   });
 
   it("shows filter and display icon buttons", async () => {
-    mockListIssues.mockResolvedValue({ issues: mockIssues, total: mockIssues.length });
+    mockListIssues.mockImplementation((params: any) =>
+      Promise.resolve(params?.open_only ? { issues: mockIssues, total: mockIssues.length } : { issues: [], total: 0 }),
+    );
 
     renderWithQuery(<IssuesPage />);
 
-    // Wait for query to resolve and component to render past loading state
     await screen.findByText("Implement auth");
     const buttons = screen.getAllByRole("button");
     expect(buttons.length).toBeGreaterThan(0);
