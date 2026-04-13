@@ -249,6 +249,10 @@ export class ApiClient {
     return this.fetch(`/api/issues/${id}/children`);
   }
 
+  async getChildIssueProgress(): Promise<{ progress: { parent_issue_id: string; total: number; done: number }[] }> {
+    return this.fetch("/api/issues/child-progress");
+  }
+
   async deleteIssue(id: string): Promise<void> {
     await this.fetch(`/api/issues/${id}`, { method: "DELETE" });
   }
