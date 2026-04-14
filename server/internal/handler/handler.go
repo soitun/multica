@@ -246,6 +246,22 @@ func (h *Handler) requireWorkspaceRole(w http.ResponseWriter, r *http.Request, w
 	return member, true
 }
 
+// isWorkspaceEntity checks whether a user_id belongs to the given workspace,
+// as either a member or an agent depending on userType.
+func (h *Handler) isWorkspaceEntity(ctx context.Context, userType, userID, workspaceID string) bool {
+	switch userType {
+	case "agent":
+		_, err := h.Queries.GetAgentInWorkspace(ctx, db.GetAgentInWorkspaceParams{
+			ID:          parseUUID(userID),
+			WorkspaceID: parseUUID(workspaceID),
+		})
+		return err == nil
+	default:
+		_, err := h.getWorkspaceMember(ctx, userID, workspaceID)
+		return err == nil
+	}
+}
+
 func (h *Handler) loadIssueForUser(w http.ResponseWriter, r *http.Request, issueID string) (db.Issue, bool) {
 	if _, ok := requireUserID(w, r); !ok {
 		return db.Issue{}, false
