@@ -33,11 +33,17 @@ linux:
   target:
     - AppImage
     - deb
-  artifactName: ${name}-${version}-${arch}.${ext}
+  # Hardcoded name — same rationale as mac: avoids the `@multica/desktop-*`
+  # subdirectory that `${name}` produces for scoped package names.
+  artifactName: multica-desktop-${version}-${arch}.${ext}
 win:
   target:
     - nsis
-  artifactName: ${name}-${version}-setup.${ext}
+  # Hardcoded name — `${name}` resolves to `@multica/desktop` which contains
+  # a slash, producing invalid filenames on Windows.
+  artifactName: multica-desktop-${version}-setup.${ext}
+nsis:
+  artifactName: multica-desktop-${version}-setup.${ext}
 publish:
   provider: github
   owner: multica-ai
