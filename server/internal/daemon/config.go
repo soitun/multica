@@ -189,9 +189,12 @@ func LoadConfig(overrides Overrides) (Config, error) {
 	profile := overrides.Profile
 
 	// daemon_id resolution: override > env > persistent UUID on disk.
-	// The persistent UUID is written once to `<profile-dir>/daemon.id` and
-	// then reused forever so hostname drift (.local suffix, system rename,
-	// mDNS state, profile switch) no longer mints a new runtime identity.
+	// The persistent UUID is written once to `~/.multica/daemon.id` and
+	// reused forever so hostname drift (.local suffix, system rename, mDNS
+	// state) no longer mints a new runtime identity. The file is machine-
+	// wide — intentionally not per-profile — so CLI and Desktop daemons on
+	// the same host share one identity and collapse into a single runtime
+	// row via the `(workspace_id, daemon_id, provider)` unique constraint.
 	// Callers may still pin a specific id via MULTICA_DAEMON_ID or the
 	// override field (e.g. for tests or embedded environments).
 	daemonID := strings.TrimSpace(os.Getenv("MULTICA_DAEMON_ID"))
@@ -199,7 +202,7 @@ func LoadConfig(overrides Overrides) (Config, error) {
 		daemonID = overrides.DaemonID
 	}
 	if daemonID == "" {
-		persisted, err := EnsureDaemonID(profile)
+		persisted, err := EnsureDaemonID()
 		if err != nil {
 			return Config{}, fmt.Errorf("ensure daemon id: %w", err)
 		}

@@ -14,7 +14,7 @@ func TestEnsureDaemonID_Persists(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 
-	first, err := EnsureDaemonID("")
+	first, err := EnsureDaemonID()
 	if err != nil {
 		t.Fatalf("EnsureDaemonID first call: %v", err)
 	}
@@ -31,7 +31,7 @@ func TestEnsureDaemonID_Persists(t *testing.T) {
 		t.Fatalf("file contents %q differ from returned UUID %q", data, first)
 	}
 
-	second, err := EnsureDaemonID("")
+	second, err := EnsureDaemonID()
 	if err != nil {
 		t.Fatalf("EnsureDaemonID second call: %v", err)
 	}
@@ -40,24 +40,33 @@ func TestEnsureDaemonID_Persists(t *testing.T) {
 	}
 }
 
-func TestEnsureDaemonID_ProfileIsolated(t *testing.T) {
+// TestEnsureDaemonID_MachineScopedAcrossProfiles pins the behavior the user
+// needs: identity is machine-wide, not profile-scoped. The CLI daemon and the
+// Desktop daemon (which runs under its own `desktop-<host>` profile) must end
+// up with the same daemon_id when running on the same machine, so they
+// register against a single runtime row instead of minting a new row every
+// time the Desktop app opens alongside the CLI.
+func TestEnsureDaemonID_MachineScopedAcrossProfiles(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 
-	defaultID, err := EnsureDaemonID("")
+	cliID, err := EnsureDaemonID()
 	if err != nil {
-		t.Fatalf("default profile: %v", err)
+		t.Fatalf("first call: %v", err)
 	}
-	stagingID, err := EnsureDaemonID("staging")
+	// Simulate a second daemon process (e.g. Desktop) starting up — it must
+	// read the same file, not mint a new UUID.
+	desktopID, err := EnsureDaemonID()
 	if err != nil {
-		t.Fatalf("staging profile: %v", err)
+		t.Fatalf("second call: %v", err)
 	}
-	if defaultID == stagingID {
-		t.Fatalf("profiles shared the same daemon id: %s", defaultID)
+	if cliID != desktopID {
+		t.Fatalf("machine identity drifted between calls: %s vs %s", cliID, desktopID)
 	}
 
-	if _, err := os.Stat(filepath.Join(home, ".multica", "profiles", "staging", "daemon.id")); err != nil {
-		t.Fatalf("profile-scoped daemon.id missing: %v", err)
+	// And no stray per-profile daemon.id should have been written.
+	if _, err := os.Stat(filepath.Join(home, ".multica", "profiles", "desktop-api.example.com", "daemon.id")); !os.IsNotExist(err) {
+		t.Fatalf("unexpected per-profile daemon.id present: err=%v", err)
 	}
 }
 
@@ -74,7 +83,7 @@ func TestEnsureDaemonID_RegeneratesCorruptFile(t *testing.T) {
 		t.Fatalf("seed corrupt file: %v", err)
 	}
 
-	id, err := EnsureDaemonID("")
+	id, err := EnsureDaemonID()
 	if err != nil {
 		t.Fatalf("EnsureDaemonID: %v", err)
 	}

@@ -11,23 +11,30 @@ import (
 	"github.com/multica-ai/multica/server/internal/cli"
 )
 
-// daemonIDFileName is the per-profile file that stores this machine's stable
+// daemonIDFileName is the per-machine file that stores this host's stable
 // daemon identifier. Once created, the UUID inside is the daemon's identity
-// forever — hostname changes, .local suffix drift, profile switches and
+// forever — hostname changes, .local suffix drift, profile switches, and
 // system renames no longer mint a new identity.
 const daemonIDFileName = "daemon.id"
 
-// EnsureDaemonID returns a stable UUID for this daemon instance, persisting
-// it to disk on first call. The file is stored per profile so multiple
-// profiles on the same machine each get their own identity:
+// EnsureDaemonID returns a stable UUID for this machine, persisting it to
+// disk at `~/.multica/daemon.id` on first call.
 //
-//	default profile → ~/.multica/daemon.id
-//	named profile   → ~/.multica/profiles/<name>/daemon.id
+// The file is intentionally NOT per-profile. A single machine has one daemon
+// identity regardless of which profile the user is running under — the CLI
+// daemon (default profile) and the Desktop daemon (its own `desktop-<host>`
+// profile) must both register against the same runtime row, or the user ends
+// up with two rows per provider per workspace every time they open the
+// Desktop app after using the CLI (or vice versa). The unique constraint
+// `(workspace_id, daemon_id, provider)` then naturally collapses them.
+//
+// Profiles still own their own config.json / log / token — only *identity*
+// is machine-wide.
 //
 // If the file exists but is corrupt (unparseable), it is regenerated so the
 // daemon can continue starting up instead of hard-failing.
-func EnsureDaemonID(profile string) (string, error) {
-	dir, err := cli.ProfileDir(profile)
+func EnsureDaemonID() (string, error) {
+	dir, err := cli.ProfileDir("")
 	if err != nil {
 		return "", err
 	}
@@ -44,7 +51,7 @@ func EnsureDaemonID(profile string) (string, error) {
 	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", fmt.Errorf("create profile directory: %w", err)
+		return "", fmt.Errorf("create multica directory: %w", err)
 	}
 
 	id, err := uuid.NewV7()
