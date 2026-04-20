@@ -51,11 +51,11 @@ func TestDefaultModel(t *testing.T) {
 		"claude":   "claude-sonnet-4-6",
 		"codex":    "gpt-5.4",
 		"gemini":   "gemini-2.5-pro",
-		"cursor":   "composer-1.5",
-		"copilot":  "", // GitHub-routed, deliberately no opinion
-		"hermes":   "", // out-of-band config
-		"opencode": "", // dynamic, no shipped default
-		"openclaw": "", // pre-registered agents only
+		"cursor":   "auto", // cursor is now dynamic; "auto" is the safe static fallback
+		"copilot":  "",     // GitHub-routed, deliberately no opinion
+		"hermes":   "",     // out-of-band config
+		"opencode": "",     // dynamic, no shipped default
+		"openclaw": "",     // pre-registered agents only
 	}
 	for provider, want := range cases {
 		got := DefaultModel(provider)
@@ -198,6 +198,52 @@ func TestParseOpenclawAgentsJSONWrapped(t *testing.T) {
 func TestParseOpenclawAgentsJSONRejectsGarbage(t *testing.T) {
 	if _, ok := parseOpenclawAgentsJSON([]byte("not json")); ok {
 		t.Error("expected ok=false for non-JSON")
+	}
+}
+
+func TestParseCursorModels(t *testing.T) {
+	input := `Available models
+
+auto - Auto
+composer-2-fast - Composer 2 Fast (current, default)
+composer-2 - Composer 2
+claude-4.6-sonnet-medium - Sonnet 4.6 1M
+claude-opus-4-7-high - Opus 4.7 1M
+gemini-3.1-pro - Gemini 3.1 Pro
+`
+	models := parseCursorModels(input)
+	if len(models) != 6 {
+		t.Fatalf("expected 6 models, got %d: %+v", len(models), models)
+	}
+	ids := map[string]Model{}
+	for _, m := range models {
+		ids[m.ID] = m
+	}
+	for _, want := range []string{"auto", "composer-2-fast", "composer-2", "claude-4.6-sonnet-medium", "claude-opus-4-7-high", "gemini-3.1-pro"} {
+		if _, ok := ids[want]; !ok {
+			t.Errorf("missing expected model %q in: %+v", want, models)
+		}
+	}
+	if def := ids["composer-2-fast"]; !def.Default {
+		t.Errorf("composer-2-fast should be marked default, got %+v", def)
+	}
+	if def := ids["composer-2-fast"]; def.Label != "Composer 2 Fast" {
+		t.Errorf("default label should be stripped of parenthetical, got %q", def.Label)
+	}
+	// Non-default entry should not carry Default=true.
+	if auto := ids["auto"]; auto.Default {
+		t.Errorf("non-default entry should not be flagged default: %+v", auto)
+	}
+}
+
+func TestParseCursorModelsSkipsHeaderAndBlankLines(t *testing.T) {
+	input := `Available models
+
+composer-2 - Composer 2
+`
+	models := parseCursorModels(input)
+	if len(models) != 1 || models[0].ID != "composer-2" {
+		t.Fatalf("unexpected: %+v", models)
 	}
 }
 

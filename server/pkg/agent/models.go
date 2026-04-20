@@ -57,7 +57,9 @@ func ListModels(ctx context.Context, providerType, executablePath string) ([]Mod
 	case "gemini":
 		return geminiStaticModels(), nil
 	case "cursor":
-		return cursorStaticModels(), nil
+		return cachedDiscovery(providerType, func() ([]Model, error) {
+			return discoverCursorModels(ctx, executablePath)
+		})
 	case "copilot":
 		return copilotStaticModels(), nil
 	case "hermes":
@@ -194,19 +196,15 @@ func geminiStaticModels() []Model {
 	}
 }
 
-// cursorStaticModels mirrors the documented cursor-agent --model IDs.
-// cursor-agent is itself a multi-provider wrapper, so this is an
-// allowlist of known-good values rather than an exhaustive catalog.
-// Default = composer-1.5 because that's cursor-agent's native model;
-// the rest are alternative provider routings.
+// cursorStaticModels is a minimal fallback used when
+// `cursor-agent --list-models` isn't available (binary missing,
+// offline, etc). The real catalog is fetched dynamically because
+// Cursor's model IDs shift (e.g. `composer-2-fast`,
+// `claude-4.6-sonnet-medium`, `gemini-3.1-pro`) and any static
+// list we ship goes stale fast.
 func cursorStaticModels() []Model {
 	return []Model{
-		{ID: "composer-1.5", Label: "Composer 1.5", Provider: "cursor", Default: true},
-		{ID: "claude-opus-4-7", Label: "Claude Opus 4.7", Provider: "anthropic"},
-		{ID: "claude-sonnet-4-6", Label: "Claude Sonnet 4.6", Provider: "anthropic"},
-		{ID: "gpt-5.4", Label: "GPT-5.4", Provider: "openai"},
-		{ID: "o3", Label: "o3", Provider: "openai"},
-		{ID: "gemini-2.5-pro", Label: "Gemini 2.5 Pro", Provider: "google"},
+		{ID: "auto", Label: "Auto", Provider: "cursor", Default: true},
 	}
 }
 
@@ -341,6 +339,92 @@ func parsePiModels(output string) []Model {
 			provider = id[:i]
 		}
 		models = append(models, Model{ID: id, Label: id, Provider: provider})
+	}
+	return models
+}
+
+// discoverCursorModels runs `cursor-agent --list-models` and parses
+// the `id - Label` rows. Cursor's catalog changes often and ships
+// many variants of the same base model (thinking / fast / max
+// suffixes) — static baking would be obsolete within weeks. On any
+// failure we fall back to the minimal static catalog so the UI
+// stays usable when cursor-agent isn't installed on the daemon host.
+func discoverCursorModels(ctx context.Context, executablePath string) ([]Model, error) {
+	if executablePath == "" {
+		executablePath = "cursor-agent"
+	}
+	if _, err := exec.LookPath(executablePath); err != nil {
+		return cursorStaticModels(), nil
+	}
+	runCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(runCtx, executablePath, "--list-models")
+	out, err := cmd.Output()
+	if err != nil {
+		return cursorStaticModels(), nil
+	}
+	models := parseCursorModels(string(out))
+	if len(models) == 0 {
+		return cursorStaticModels(), nil
+	}
+	return models, nil
+}
+
+// parseCursorModels extracts model IDs from `cursor-agent --list-models`.
+// Output format (as of cursor-agent 2026.04):
+//
+//	Available models
+//	<blank>
+//	auto - Auto
+//	composer-2-fast - Composer 2 Fast (current, default)
+//	composer-2 - Composer 2
+//	…
+//
+// The model tagged `(default)` is surfaced as Default=true so the
+// UI badge points at cursor's own recommendation rather than a
+// hard-coded guess from our catalog.
+func parseCursorModels(output string) []Model {
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	var models []Model
+	seen := map[string]bool{}
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		// Row format: "<id> - <label>". Skip the "Available models" header.
+		idx := strings.Index(line, " - ")
+		if idx <= 0 {
+			continue
+		}
+		id := strings.TrimSpace(line[:idx])
+		label := strings.TrimSpace(line[idx+3:])
+		if !isOpenclawIdentifier(id) {
+			// Reuse the identifier guard — cursor IDs are in the
+			// same character set (alnum + `-./_`), so anything
+			// that fails it is either malformed or a header line.
+			continue
+		}
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		isDefault := strings.Contains(label, "default")
+		// Strip the "(current, default)" suffix from the display
+		// label since we surface that through the Default flag.
+		if paren := strings.Index(label, "("); paren > 0 {
+			label = strings.TrimSpace(label[:paren])
+		}
+		if label == "" {
+			label = id
+		}
+		models = append(models, Model{
+			ID:       id,
+			Label:    label,
+			Provider: "cursor",
+			Default:  isDefault,
+		})
 	}
 	return models
 }
