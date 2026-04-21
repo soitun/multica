@@ -288,14 +288,16 @@ export const en: LandingDict = {
         title: "Analytics Pipeline, Desktop Cross-Platform Packaging & Board Pagination",
         changes: [],
         features: [
-          "Full PostHog analytics pipeline with 6 activation funnel events (MUL-1122)",
-          "Desktop app cross-platform packaging — build macOS, Windows, and Linux artifacts from a single release pipeline",
+          "Product analytics pipeline with activation funnel events powering onboarding and retention insights",
+          "Desktop app cross-platform packaging — macOS, Windows, and Linux artifacts from a single release pipeline",
           "Issue board paginates every status column, not only Done — large backlogs stay responsive",
         ],
         fixes: [
-          "Inbox no longer auto-archives an issue when you delete it, and stops remounting `IssueDetail` on every new comment or reaction (MUL-1199)",
-          "Agent tasks triggered by a comment now reliably synthesize a result comment, so replies reach the issue instead of dying in terminal output",
-          "Comment Markdown is preserved end-to-end — the HTML sanitizer that was stripping formatting has been removed",
+          "Workspace isolation enforced end-to-end for agent execution on the local daemon (security)",
+          "`multica update` self-update command, and the Windows daemon now stays alive after the terminal closes",
+          "Board cards render their description preview again — list queries no longer strip the description field",
+          "PostHog autocapture and session recording disabled by default — opt-in only, noisier telemetry off",
+          "Comment Markdown preserved end-to-end — the HTML sanitizer that was stripping formatting has been removed",
         ],
       },
       {
