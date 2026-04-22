@@ -165,24 +165,21 @@ func registerListeners(bus *events.Bus, b realtime.Broadcaster) {
 			return
 		}
 
-		// Phase 1 (MUL-1138): high-frequency per-resource events go to a
-		// dedicated scope so we don't fan them out to the whole workspace.
-		// Producers should set Event.TaskID / Event.ChatSessionID; if they
-		// don't, fall back to workspace fanout for safety.
-		switch e.Type {
-		case protocol.EventTaskMessage, protocol.EventTaskProgress:
-			if e.TaskID != "" {
-				realtime.M.RecordEvent(e.Type)
-				b.BroadcastToScope(realtime.ScopeTask, e.TaskID, data)
-				return
-			}
-		case protocol.EventChatMessage, protocol.EventChatDone, protocol.EventChatSessionRead:
-			if e.ChatSessionID != "" {
-				realtime.M.RecordEvent(e.Type)
-				b.BroadcastToScope(realtime.ScopeChat, e.ChatSessionID, data)
-				return
-			}
-		}
+		// Phase 1 (MUL-1138): the per-resource scope routing for high-frequency
+		// task/chat events is intentionally NOT enabled yet. The server-side
+		// pieces — Hub.subscribe/unsubscribe protocol, ScopeAuthorizer, Redis
+		// Streams relay — have all landed, but the client (WSClient + the
+		// per-page chat/task hooks) does not yet send `subscribe` frames or
+		// replay subscriptions on reconnect. Routing these events through
+		// `BroadcastToScope("task"|"chat", ...)` today would silently drop
+		// every chat/task message on the floor, breaking the live chat
+		// timeline, chat unread badges, and pending-task UI.
+		//
+		// Until the client lands its scope-subscription PR, we keep
+		// task/chat events on workspace fanout (same behavior as before this
+		// PR). The `Event.TaskID` / `Event.ChatSessionID` hints are still
+		// populated by producers so that flipping the switch later is a
+		// one-line change here. See review on PR #1429 for context.
 
 		if e.WorkspaceID != "" {
 			realtime.M.RecordEvent(e.Type)
