@@ -275,7 +275,7 @@ export function createZhDict(allowSignup: boolean): LandingDict {
   changelog: {
     title: "\u66f4\u65b0\u65e5\u5fd7",
     subtitle: "Multica \u7684\u6700\u65b0\u66f4\u65b0\u548c\u6539\u8fdb\u3002",
-    toc: "\u672c\u9875\u76ee\u5f55",
+    toc: "\u5386\u53f2\u7248\u672c",
     categories: {
       features: "新功能",
       improvements: "改进",

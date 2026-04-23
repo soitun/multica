@@ -275,7 +275,7 @@ export function createEnDict(allowSignup: boolean): LandingDict {
   changelog: {
     title: "Changelog",
     subtitle: "New updates and improvements to Multica.",
-    toc: "On this page",
+    toc: "All releases",
     categories: {
       features: "New Features",
       improvements: "Improvements",
