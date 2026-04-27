@@ -15,6 +15,47 @@ import (
 	"github.com/multica-ai/multica/server/internal/cli"
 )
 
+// unescapeFlagText decodes the common backslash escape sequences (\n, \r, \t,
+// \\) in a free-form string flag value. Shells like bash do not expand these
+// inside double quotes, so an LLM agent that emits
+// `--content "para1\n\npara2"` ends up sending the literal 4-char sequence to
+// the CLI and then to storage, where it renders as text rather than as line
+// breaks. Decoding here makes the flag behave the way callers intuit; users
+// who genuinely need a literal backslash-n can write `\\n` or pipe the body
+// via `--content-stdin`, which bypasses this path entirely.
+func unescapeFlagText(s string) string {
+	if !strings.ContainsRune(s, '\\') {
+		return s
+	}
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\\' && i+1 < len(s) {
+			switch s[i+1] {
+			case 'n':
+				b.WriteByte('\n')
+				i++
+				continue
+			case 'r':
+				b.WriteByte('\r')
+				i++
+				continue
+			case 't':
+				b.WriteByte('\t')
+				i++
+				continue
+			case '\\':
+				b.WriteByte('\\')
+				i++
+				continue
+			}
+		}
+		b.WriteByte(c)
+	}
+	return b.String()
+}
+
 var issueCmd = &cobra.Command{
 	Use:   "issue",
 	Short: "Work with issues",
@@ -412,7 +453,7 @@ func runIssueCreate(cmd *cobra.Command, _ []string) error {
 
 	body := map[string]any{"title": title}
 	if v, _ := cmd.Flags().GetString("description"); v != "" {
-		body["description"] = v
+		body["description"] = unescapeFlagText(v)
 	}
 	if v, _ := cmd.Flags().GetString("status"); v != "" {
 		body["status"] = v
@@ -488,7 +529,7 @@ func runIssueUpdate(cmd *cobra.Command, args []string) error {
 	}
 	if cmd.Flags().Changed("description") {
 		v, _ := cmd.Flags().GetString("description")
-		body["description"] = v
+		body["description"] = unescapeFlagText(v)
 	}
 	if cmd.Flags().Changed("status") {
 		v, _ := cmd.Flags().GetString("status")
@@ -733,6 +774,8 @@ func runIssueCommentAdd(cmd *cobra.Command, args []string) error {
 		if content == "" {
 			return fmt.Errorf("stdin content is empty")
 		}
+	} else {
+		content = unescapeFlagText(content)
 	}
 
 	if content == "" {

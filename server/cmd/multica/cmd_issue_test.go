@@ -11,6 +11,33 @@ import (
 	"github.com/multica-ai/multica/server/internal/cli"
 )
 
+func TestUnescapeFlagText(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"empty", "", ""},
+		{"no escapes", "hello world", "hello world"},
+		{"single newline", `line1\nline2`, "line1\nline2"},
+		{"double newline becomes paragraph", `para1\n\npara2`, "para1\n\npara2"},
+		{"tab and carriage return", `a\tb\rc`, "a\tb\rc"},
+		{"escaped backslash preserved as literal", `keep\\nliteral`, `keep\nliteral`},
+		{"trailing lone backslash kept verbatim", `tail\`, `tail\`},
+		{"unknown escape kept verbatim", `\x not touched`, `\x not touched`},
+		{"mixed real and escaped newlines", "real\n" + `and\nescaped`, "real\nand\nescaped"},
+		{"unicode untouched", `中文段落\n下一段`, "中文段落\n下一段"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := unescapeFlagText(tt.in)
+			if got != tt.want {
+				t.Errorf("unescapeFlagText(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestTruncateID(t *testing.T) {
 	tests := []struct {
 		name string
